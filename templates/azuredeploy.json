@@ -4,6 +4,7 @@
     "parameters": {
         "functionName": {
             "type": "string",
+            "defaultValue": "securehats-cth"
             "metadata": {
                 "description": "Specifies the name of the Function App."
             }
