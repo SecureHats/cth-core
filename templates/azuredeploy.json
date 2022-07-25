@@ -4,7 +4,7 @@
     "parameters": {
         "functionName": {
             "type": "string",
-            "defaultValue": "securehats-cth"
+            "defaultValue": "securehats-cth",
             "metadata": {
                 "description": "Specifies the name of the Function App."
             }
@@ -179,6 +179,45 @@
                         }
                     },
                     "keySource": "Microsoft.Storage"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(variables('StorageAccountName'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": [
+                    ]
+                },
+                "deleteRetentionPolicy": {
+                    "enabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(variables('StorageAccountName'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": [
+                    ]
                 }
             }
         }

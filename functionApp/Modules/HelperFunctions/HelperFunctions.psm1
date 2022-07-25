@@ -331,7 +331,7 @@ Function Invoke-Challenge {
     switch ($flagCode) {
         "{cth-$3cureY0ur5@S}" {
             $cthCode = 'SH-002'
-            Write-Verbose "Challenge 1 completed, deploying scenario II"
+            Write-Host "Challenge 1 completed, deploying scenario II"
 
             $guid = ('cth-sh002-{0}' -f (new-guid).guid).Substring(0, 18)
 
@@ -368,9 +368,9 @@ Function Invoke-Challenge {
     }
 
     $result = @{
-        'UserAccount'       = "$user.UserName"
-        'Password'          = "$user.Password"
-        'Storage Account'   = "$resources.properties.outputs.storageAccountName.value"
+        'UserAccount'       = "$($user.UserName)"
+        'Password'          = "$($user.Password)"
+        'Storage Account'   = "$($resources.properties.outputs.storageAccountName.value)"
     }
     return $result
 }
