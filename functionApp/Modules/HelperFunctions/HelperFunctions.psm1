@@ -329,7 +329,7 @@ Function Invoke-Challenge {
     )
 
     switch ($flagCode) {
-        "{cth-$3cureY0ur5@S}" {
+        '{cth-$3cureY0ur5@S}' {
             $cthCode = 'SH-002'
             Write-Host "Challenge 1 completed, deploying scenario II"
 
@@ -361,7 +361,7 @@ Function Invoke-Challenge {
             $user       = New-UserAccount -Country 'NL'
             $roles      = New-RoleAssignment -UserId "$($user.id)" -ResourceId $rg.id -RoleGuid @('acdd72a7-3385-48ef-bd42-f606fba81ae7', '17d1049b-9a84-46fb-8f53-869881c3d3ab')
             $resources  = New-ResourceDeployment -Name $cthCode -ResourceGroupId $rg.id $Payload  -Hidden
-            $cth        = New-Content -Name $cthCode
+            $cth        = New-Content -cthCode $cthCode
             #endregion Create Challenge
         }
         Default {}
