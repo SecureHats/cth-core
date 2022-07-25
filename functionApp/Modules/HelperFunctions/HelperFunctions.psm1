@@ -129,12 +129,12 @@ Function New-UserAccount {
     )
 
     # Create User Account
-    Write-Host 'Creating Random User Account'
+    Write-Host '[+] Creating Random User Account'
     try {
         $user = (Invoke-RestMethod -uri https://randomuser.me/api/?nat=$Country).results
     }
     catch {
-        Write-Host 'Server busy, wating 30 seconds'
+        Write-Host '    [-] Server busy, wating 30 seconds'
         Start-Sleep 30
         $user = (Invoke-RestMethod -uri https://randomuser.me/api/?nat=$Country).results
     }
@@ -172,8 +172,8 @@ Function New-AzureResourceGroup {
 
     )
 
-        Write-Host 'Creating Azure Resource with name [$ResourceGroupName]'
-        Write-Host "Staring deployment of resource group..."
+        Write-Host "[+] Creating Azure Resource with name [$Name]"
+        Write-Host "   [-] Starting deployment of resource group..."
         $deployment = Invoke-RestMethod @azHeaders `
             -Uri https://management.azure.com/subscriptions/$($SubscriptionId)/resourceGroups/$($Name)?api-version=2021-04-01 `
             -body ( @{ 'location' = "$Location" } | ConvertTo-Json ) `
@@ -228,10 +228,11 @@ Function New-RoleAssignment {
         [string]$ResourceId
     )
 
+    Write-Host "[+] Creating Role Assignments"
     $uri = 'https://management.azure.com{0}/providers/microsoft.authorization/roleassignments/{1}?api-version=2015-07-01' -f $ResourceId, (New-Guid).guid
 
     foreach ($id in $RoleGuid) {
-        Write-Host "Assigning Role with Id [$($id)]"
+        Write-Host "   [-] Assigning Role with Id [$($id)]"
         $body = @{
             "properties" = @{
                 "roleDefinitionId" = "/providers/Microsoft.Authorization/roleDefinitions/$($id)"
@@ -263,7 +264,7 @@ Function New-ResourceDeployment {
         [object]$Payload,
 
         [Parameter(Mandatory = $false)]
-        [switch]$Hidden
+        [switch]$Stealth
         )
 
     $params = @{
@@ -273,7 +274,7 @@ Function New-ResourceDeployment {
         "Body"    = $payload | ConvertTo-Json -Depth 10 -Compress
     }
 
-    Write-Host "Start deployment"
+    Write-Host "[+] Start deployment"
     $deployment = Invoke-RestMethod @params @azHeaders -UseBasicParsing
 
     $params = @{
@@ -284,12 +285,12 @@ Function New-ResourceDeployment {
     do {
         Start-Sleep -Seconds 10
         $deployment = Invoke-RestMethod @params @azHeaders -UseBasicParsing
-        Write-Host "Deployment status: $($deployment.properties.provisioningState)"
+        Write-Host "    [-] Deployment status: $($deployment.properties.provisioningState)"
     } while ($deployment.properties.provisioningState -in @("Accepted", "Created", "Creating", "Running", "Updating"))
 
     return $deployment
 
-    if ($Hidden) {
+    if ($Stealth) {
         $uri = "https://management.azure.com$($ResourceGroupId)/providers/Microsoft.Resources/deployments/?api-version=2021-04-01"
         Invoke-RestMethod -Uri $uri @azHeaders -Method 'DELETE'
     }
@@ -310,9 +311,10 @@ Function New-Content {
         'ContentType' = 'application/json'
     }
 
-    Write-Verbose "Downloading file to [$tempfile]"
+    Write-Host "[+] Downloading challange package"
     Invoke-RestMethod @params -OutFile "$tempfile"
 
+    Write-Host "    [-] Starting challange deployment"
     Publish-AzWebapp `
         -ResourceGroupName "$guid" `
         -Name "$guid" `
@@ -331,7 +333,7 @@ Function Invoke-Challenge {
     switch ($flagCode) {
         '{cth-$3cureY0ur5@S}' {
             $cthCode = 'SH-002'
-            Write-Host "Challenge 1 completed, deploying scenario II"
+            Write-Host "[+] Challenge 1 completed, deploying scenario II"
 
             $guid = ('cth-sh002-{0}' -f (new-guid).guid).Substring(0, 18)
 
@@ -360,7 +362,7 @@ Function Invoke-Challenge {
             $rg         = New-AzureResourceGroup -Name $guid
             $user       = New-UserAccount -Country 'NL'
             $roles      = New-RoleAssignment -UserId "$($user.id)" -ResourceId $rg.id -RoleGuid @('acdd72a7-3385-48ef-bd42-f606fba81ae7', '17d1049b-9a84-46fb-8f53-869881c3d3ab')
-            $resources  = New-ResourceDeployment -Name $cthCode -ResourceGroupId $rg.id $Payload  -Hidden
+            $resources  = New-ResourceDeployment -Name $cthCode -ResourceGroupId $rg.id $Payload -Stealth
             $cth        = New-Content -cthCode $cthCode
             #endregion Create Challenge
         }
