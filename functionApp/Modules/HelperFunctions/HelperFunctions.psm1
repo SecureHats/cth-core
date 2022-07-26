@@ -209,7 +209,7 @@ Function New-AzureAdUser {
             $result = [ordered]@{
                 'id'                = $deployment.id
                 'Username'           = $deployment.UserPrincipalName
-                'Password'           = "_$($userObject.passwordProfile.Password)"
+                'Password'           = "$($userObject.passwordProfile.Password)"
             }
 
             return $result
