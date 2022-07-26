@@ -129,7 +129,7 @@ Function New-UserAccount {
     )
 
     # Create User Account
-    Write-Host '[+] Creating Random User Account'
+    Write-Host '[+] Creating User Account'
     try {
         $user = (Invoke-RestMethod -uri https://randomuser.me/api/?nat=$Country).results
     }
@@ -173,7 +173,6 @@ Function New-AzureResourceGroup {
     )
 
         Write-Host "[+] Creating Azure Resource with name [$Name]"
-        Write-Host "   [-] Starting deployment of resource group..."
         $deployment = Invoke-RestMethod @azHeaders `
             -Uri https://management.azure.com/subscriptions/$($SubscriptionId)/resourceGroups/$($Name)?api-version=2021-04-01 `
             -body ( @{ 'location' = "$Location" } | ConvertTo-Json ) `
@@ -189,7 +188,6 @@ Function New-AzureAdUser {
         [object]$UserObject
     )
 
-    Write-Host 'Create new User'
     $params = @{
         'URI' = 'https://graph.microsoft.com/beta/users'
         'ContentType' = 'application/json'
@@ -198,6 +196,13 @@ Function New-AzureAdUser {
     }
 
     try {
+        Write-Host 'Creating Azure AD header'
+
+            $aadHeaders = @{
+            "Authentication" = "Bearer"
+            "Token"          = (Get-MSIMSGraphAccessToken -endpoint 'AzureAd') | ConvertTo-SecureString -AsPlainText -Force
+        }
+
         $deployment = Invoke-RestMethod @params @aadHeaders
 
         if (!($null -eq $deployment)) {
@@ -232,7 +237,7 @@ Function New-RoleAssignment {
     $uri = 'https://management.azure.com{0}/providers/microsoft.authorization/roleassignments/{1}?api-version=2015-07-01' -f $ResourceId, (New-Guid).guid
 
     foreach ($id in $RoleGuid) {
-        Write-Host "   [-] Assigning Role with Id [$($id)]"
+        Write-Host "    [-] Assigning Role with Id [$($id)]"
         $body = @{
             "properties" = @{
                 "roleDefinitionId" = "/providers/Microsoft.Authorization/roleDefinitions/$($id)"
@@ -263,8 +268,9 @@ Function New-ResourceDeployment {
         [Parameter(Mandatory = $true)]
         [object]$Payload,
 
-        [Parameter(Mandatory = $false)]
-        [switch]$Stealth
+        [Parameter(Mandatory = $true)]
+        [string]$cthCode
+
         )
 
     $params = @{
@@ -288,12 +294,10 @@ Function New-ResourceDeployment {
         Write-Host "    [-] Deployment status: $($deployment.properties.provisioningState)"
     } while ($deployment.properties.provisioningState -in @("Accepted", "Created", "Creating", "Running", "Updating"))
 
-    return $deployment
-
-    if ($Stealth) {
-        $uri = "https://management.azure.com$($ResourceGroupId)/providers/Microsoft.Resources/deployments/?api-version=2021-04-01"
+        $uri = "https://management.azure.com$($rg.id)/providers/Microsoft.Resources/deployments/$($cthCode)?api-version=2021-04-01"
         Invoke-RestMethod -Uri $uri @azHeaders -Method 'DELETE'
-    }
+
+    return $deployment
 }
 
 Function New-Content {
@@ -320,7 +324,6 @@ Function New-Content {
         -Name "$guid" `
         -ArchivePath "$tempfile" `
         -Force
-
 }
 
 Function Invoke-Challenge {
@@ -330,14 +333,18 @@ Function Invoke-Challenge {
         [string]$flagCode
     )
 
+    $script:azHeaders = @{
+        "Authentication" = "Bearer"
+        "Token"          = (Get-MSIMSGraphAccessToken -endpoint 'Azure') | ConvertTo-SecureString -AsPlainText -Force
+    }
+
     switch ($flagCode) {
         '{cth-$3cureY0ur5@S}' {
             $cthCode = 'SH-002'
-            Write-Host "[+] Challenge 1 completed, deploying scenario II"
+            Write-Host "[+] Deploying new challenge"
 
             $guid = ('cth-sh002-{0}' -f (new-guid).guid).Substring(0, 18)
 
-            Write-Host 'Creating deployment Payload'
             $payload = @{
                 'properties' = @{
                     'templateLink' = @{
@@ -362,9 +369,10 @@ Function Invoke-Challenge {
             $rg         = New-AzureResourceGroup -Name $guid
             $user       = New-UserAccount -Country 'NL'
             $roles      = New-RoleAssignment -UserId "$($user.id)" -ResourceId $rg.id -RoleGuid @('acdd72a7-3385-48ef-bd42-f606fba81ae7', '17d1049b-9a84-46fb-8f53-869881c3d3ab')
-            $resources  = New-ResourceDeployment -Name $cthCode -ResourceGroupId $rg.id $Payload -Stealth
+            $resources  = New-ResourceDeployment -Name $cthCode -ResourceGroupId $rg.id $Payload -cthCode $cthCode
             $cth        = New-Content -cthCode $cthCode
             #endregion Create Challenge
+
         }
         Default {}
     }
@@ -373,5 +381,10 @@ Function Invoke-Challenge {
         'UserAccount'       = "$($user.UserName)"
         'Password'          = "$($user.Password)"
     }
-    return $result
+
+    Push-OutputBinding -Name Response -Clobber -Value ([HttpResponseContext]@{
+        StatusCode = [HttpStatusCode]::OK
+        Body       = $result
+    })
+
 }
