@@ -372,7 +372,6 @@ Function Invoke-Challenge {
     $result = @{
         'UserAccount'       = "$($user.UserName)"
         'Password'          = "$($user.Password)"
-        'Storage Account'   = "$($resources.properties.outputs.storageAccountName.value)"
     }
     return $result
 }
