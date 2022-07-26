@@ -381,4 +381,6 @@ Function Invoke-Challenge {
         'UserAccount'       = "$($user.UserName)"
         'Password'          = "$($user.Password)"
     }
+
+    return $result
 }
