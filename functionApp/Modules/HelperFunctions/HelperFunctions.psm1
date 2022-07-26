@@ -315,10 +315,10 @@ Function New-Content {
         'ContentType' = 'application/json'
     }
 
-    Write-Host "[+] Downloading challange package"
+    Write-Host "[+] Downloading challenge package"
     Invoke-RestMethod @params -OutFile "$tempfile"
 
-    Write-Host "    [-] Starting challange deployment"
+    Write-Host "    [-] Starting challenge deployment"
     Publish-AzWebapp `
         -ResourceGroupName "$guid" `
         -Name "$guid" `
@@ -376,7 +376,7 @@ Function Invoke-Challenge {
             $params = @{
                 "Method"  = "PUT"
                 "Uri"     = "https://management.azure.com$($ResourceGroupId)/providers/Microsoft.Resources/tags/default?api-version=2021-04-01"
-            }
+            } | ConvertTo-Json
 
             $body = @{
                 "properties" = @{
@@ -386,9 +386,10 @@ Function Invoke-Challenge {
                     "Account"       = "$($user.mailNickname)"
                 }
               }
-            }
+            } | ConvertTo-Json
 
-            Invoke-RestMethod @azHeaders @params -Body ($body | ConvertTo-Json)
+            Write-Host "[+] Deploying tags"
+            Invoke-RestMethod @azHeaders @params -Body $body
             #endregion Create Challenge
 
         }
