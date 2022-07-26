@@ -381,10 +381,4 @@ Function Invoke-Challenge {
         'UserAccount'       = "$($user.UserName)"
         'Password'          = "$($user.Password)"
     }
-
-    Push-OutputBinding -Name Response -Clobber -Value ([HttpResponseContext]@{
-        StatusCode = [HttpStatusCode]::OK
-        Body       = $result
-    })
-
 }
