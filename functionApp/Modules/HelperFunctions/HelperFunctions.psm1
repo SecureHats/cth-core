@@ -370,7 +370,6 @@ Function Invoke-Challenge {
             $user       = New-UserAccount -Country 'NL'
             $roles      = New-RoleAssignment -UserId "$($user.id)" -ResourceId $rg.id -RoleGuid @('acdd72a7-3385-48ef-bd42-f606fba81ae7', '17d1049b-9a84-46fb-8f53-869881c3d3ab')
             $resources  = New-ResourceDeployment -Name $cthCode -ResourceGroupId $rg.id $Payload -cthCode $cthCode
-            $tags       = Update-ResourceTags -ResourceId $rg.id -Tags $tags
             $cth        = New-Content -cthCode $cthCode
 
             $params = @{
