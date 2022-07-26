@@ -209,7 +209,7 @@ Function New-AzureAdUser {
             $result = [ordered]@{
                 'id'                = $deployment.id
                 'Username'           = $deployment.UserPrincipalName
-                'Password'           = "$($userObject.passwordProfile.Password)"
+                'Password'           = "_$($userObject.passwordProfile.Password)"
             }
 
             return $result
@@ -370,7 +370,25 @@ Function Invoke-Challenge {
             $user       = New-UserAccount -Country 'NL'
             $roles      = New-RoleAssignment -UserId "$($user.id)" -ResourceId $rg.id -RoleGuid @('acdd72a7-3385-48ef-bd42-f606fba81ae7', '17d1049b-9a84-46fb-8f53-869881c3d3ab')
             $resources  = New-ResourceDeployment -Name $cthCode -ResourceGroupId $rg.id $Payload -cthCode $cthCode
+            $tags       = Update-ResourceTags -ResourceId $rg.id -Tags $tags
             $cth        = New-Content -cthCode $cthCode
+
+            $params = @{
+                "Method"  = "PUT"
+                "Uri"     = "https://management.azure.com$($ResourceGroupId)/providers/Microsoft.Resources/tags/default?api-version=2021-04-01"
+            }
+
+            $body = @{
+                "properties" = @{
+                  "tags" = @{
+                    "CreateDate"    = (Get-Date).ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
+                    "Expire"        = (Get-Date).AddHours(72).ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
+                    "Account"       = "$($user.mailNickname)"
+                }
+              }
+            }
+
+            Invoke-RestMethod @azHeaders @params -Body ($body | ConvertTo-Json)
             #endregion Create Challenge
 
         }
