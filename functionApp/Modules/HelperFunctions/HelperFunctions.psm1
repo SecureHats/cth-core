@@ -390,7 +390,7 @@ Function Invoke-Challenge {
             } | ConvertTo-Json
 
             Write-Host "[+] Deploying tags"
-            Invoke-RestMethod @azHeaders @params -Body $body
+            $null = Invoke-RestMethod @azHeaders @params -Body $body
             #endregion Create Challenge
 
         }
