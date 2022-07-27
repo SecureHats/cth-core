@@ -373,8 +373,9 @@ Function Invoke-Challenge {
             $cth        = New-Content -cthCode $cthCode
 
             $params = @{
-                "Method"  = "PUT"
-                "Uri"     = "https://management.azure.com$($rg.id)/providers/Microsoft.Resources/tags/default?api-version=2021-04-01"
+                "Method"        = "PUT"
+                "Uri"           = "https://management.azure.com$($rg.id)/providers/Microsoft.Resources/tags/default?api-version=2021-04-01"
+                "ContentType"   = "application/json"
             }
 
             $body = @{
