@@ -374,7 +374,7 @@ Function Invoke-Challenge {
 
             $params = @{
                 "Method"  = "PUT"
-                "Uri"     = "https://management.azure.com$($ResourceGroupId)/providers/Microsoft.Resources/tags/default?api-version=2021-04-01"
+                "Uri"     = "https://management.azure.com$($rg.id)/providers/Microsoft.Resources/tags/default?api-version=2021-04-01"
             }
 
             $body = @{
