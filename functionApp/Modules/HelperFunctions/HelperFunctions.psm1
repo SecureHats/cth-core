@@ -207,9 +207,10 @@ Function New-AzureAdUser {
 
         if (!($null -eq $deployment)) {
             $result = [ordered]@{
-                'id'                = $deployment.id
-                'Username'           = $deployment.UserPrincipalName
-                'Password'           = "$($userObject.passwordProfile.Password)"
+                'id'            = $deployment.id
+                'Username'      = $deployment.UserPrincipalName
+                'Password'      = "$($userObject.passwordProfile.Password)"
+                'mailNickname'  = $($userObject.mailNickname)
             }
 
             return $result
